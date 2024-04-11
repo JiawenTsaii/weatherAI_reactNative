@@ -13,4 +13,4 @@
 
 <<<<<<< HEAD
 - 目前應該是長這樣
-![image](https://github.com/JiawenTsaii/weatherAI_reactNative/blob/master/dress.jpg)
+![image](https://github.com/ZYuC-2002/weatherAI_reactNative/blob/6ace25066c533a9f45515993b91baca8901225ba/dress.jpg)
