@@ -3,8 +3,6 @@ import { View, Text, StyleSheet, Button, TextInput, CheckBox, TouchableOpacity }
 import { Picker } from '@react-native-picker/picker'; // picker備react native剔除(?)了所以莫名的要額外下載+額外import
 import { LineChart } from 'react-native-chart-kit';
 
-
-
 const App = () => {
   const [city, setCity] = useState('臺北市');
   const [temperature, setTemperature] = useState(25);
@@ -15,43 +13,48 @@ const App = () => {
   };
 
   // 獲取一週的天氣
-  // const fetchWeekData = async () => {
-  //   try {
-  //     const response = await fetch('API_ENDPOINT_HERE');
-  //     const data = await response.json();
-  //     setWeekData(data);
-  //   } catch (error) {
-  //     console.error('Error fetching week data:', error);
-  //   }
-  // };
-
-    // 一週的天氣
-    const fetchWeekData = async () => {
-      try {
-        // 模擬一週的天氣數據
-        const data = [
-          { day: '周一', high: 28, low: 15 },
-          { day: '周二', high: 30, low: 23 },
-          { day: '周三', high: 38, low: 13 },
-          { day: '周四', high: 20, low: 14 },
-          { day: '周五', high: 21, low: 17 },
-          { day: '周六', high: 29, low: 25 },
-          { day: '周日', high: 24, low: 10 }
-        ];
-        setWeekData(data);
-      } catch (error) {
-        console.error('Error fetching week data:', error);
+  const fetchWeekData = async () => {
+    try {
+      const response = await fetch('https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/F-C0032-005?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6&downloadType=WEB&format=JSON');
+      const text = await response.text();
+      const data = JSON.parse(text);
+      
+      const locations = data.cwaopendata.dataset.location;
+      
+      for (let i = 0; i < locations.length; i++) {
+        // console.log(locations[i].locationName);
+        if (locations[i].locationName == city) {
+          console.log(locations[i].locationName);
+          const locationData = locations[i];
+  
+          const MaxTimeData = locationData.weatherElement[1].time; // MaxT
+          const MinTimeData = locationData.weatherElement[2].time; // MinT
+  
+          const weekData = MaxTimeData.map(item => {
+            const date = new Date(item.startTime);
+            const day = date.getDate();
+            return {
+              day: day,
+              high: item.parameter.parameterName,
+              low: MinTimeData.find(t => t.startTime === item.startTime).parameter.parameterName // MinT
+            };
+          });
+  
+          setWeekData(weekData);
+        }
       }
-    };
+  
+    } catch (error) {
+  
+      console.error('Error fetching week data:', error);
+  
+    }
+  };
 
-  // 初次加載時獲取一週的天氣
-  useState(() => {
+  // 當 city 變量改變時，重新獲取數據
+  useEffect(() => {
     fetchWeekData();
-  }, []); // 空依賴陣列確保只會在初次加載時執行
-
-  useState(() => {
-    fetchWeekData();
-  }, []);
+  }, [city]); // 將 city 添加到依賴陣列
 
   const chartData = {
     labels: weekData.map((day) => day.day),
