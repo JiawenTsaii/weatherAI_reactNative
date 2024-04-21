@@ -4,8 +4,6 @@ import { Picker } from '@react-native-picker/picker'; // picker備react native�
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
 
-
-
 const WeekdayTimePicker = ({ day }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -45,7 +43,6 @@ const WeekdayTimePicker = ({ day }) => {
     </View>
   );
 };
-
 
 const App = () => {
   const [city, setCity] = useState('臺北市');
@@ -128,9 +125,11 @@ const App = () => {
     ]
   };
 
-
-  // 固定溫度
-  const randomTemperature = 30;
+  // 當天最高/最低溫
+  const dailyHighs = weekData.map(day => day.high);
+  const dailyLows = weekData.map(day => day.low);
+  const todayHigh = Math.max(...dailyHighs); // 找到今天的最高溫
+  const todayLow = Math.min(...dailyLows); // 找到今天的最低溫
 
   return (
     // ScrollView把整個return包起來超出畫面的部分才可以上下滑動查看
@@ -170,8 +169,8 @@ const App = () => {
             <View style={styles.rightColumnTemperatureContainer}>
               <Text style={styles.temperatureTitle}>當日最高/最低溫度</Text>
               <View style={styles.temperatureTextContainer}>
-                <Text style={styles.lowestesttemperatureText}>{randomTemperature}°C</Text>
-                <Text style={styles.highesttemperatureText}>{randomTemperature}°C</Text>
+                <Text style={styles.lowestesttemperatureText}>{todayLow}°C</Text>
+                <Text style={styles.highesttemperatureText}>{todayHigh}°C</Text>
               </View>
             </View>
           </View>
