@@ -3,7 +3,10 @@ import { ScrollView, View, Text, StyleSheet, Button, TextInput, CheckBox, Platfo
 import { Picker } from '@react-native-picker/picker'; // picker備react native剔除(?)了所以莫名的要額外下載+額外import
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
+// import axios from 'axios';
+import crawler from './crawler.js';
 
+{/* 通知時間 */}
 const WeekdayTimePicker = ({ day }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -44,6 +47,7 @@ const WeekdayTimePicker = ({ day }) => {
   );
 };
 
+{/* main */}
 const App = () => {
   const [city, setCity] = useState('臺北市');
   const [temperature, setTemperature] = useState(25);
@@ -67,6 +71,9 @@ const App = () => {
   
   // 獲取一週的天氣
   const fetchWeekData = async () => {
+    
+    // crawler();
+    
     try {
       const response = await fetch('https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/F-C0032-005?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6&downloadType=WEB&format=JSON');
       const text = await response.text();
@@ -121,9 +128,36 @@ const App = () => {
     }
   };
 
+  const fetchRainData = async () => {
+    try {
+      const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6');
+      const text = await response.text();
+      const data = JSON.parse(text);
+      
+      const locations = data.records.location;
+      
+      for (let i = 0; i < locations.length; i++) {
+        if (locations[i].locationName == city) {
+
+          const locationData = locations[i];
+  
+          const RainData = locationData.weatherElement[1].time[0].parameter.parameterName;  //PoP
+          setRainProbability(RainData);
+          console.log(RainData);
+        }
+      }
+  
+    } catch (error) {
+  
+      console.error('Error fetching week data:', error);
+  
+    }
+  };
+
   // 當 city 變量改變時，重新獲取數據
   useEffect(() => {
     fetchWeekData();
+    fetchRainData();
   }, [city]); // 將 city 添加到依賴陣列
 
   const chartData = {
@@ -145,7 +179,7 @@ const App = () => {
   const today = new Date().getDate();
   const todayData = weekData.find(day => day.condition);
 
-  // 當天最高/最低溫
+  {/* 當天最高/最低溫 */}
   const dailyHighs = weekData.map(day => day.high);
   const dailyLows = weekData.map(day => day.low);
   const todayHigh = Math.max(...dailyHighs); // 找到今天的最高溫
