@@ -47,7 +47,7 @@ const WeekdayTimePicker = ({ day }) => {
 const App = () => {
   const [city, setCity] = useState('臺北市');
   const [temperature, setTemperature] = useState(25);
-  const [weekData, setWeekData] = useState([0, 0, 0, 0, 0, 0, 0]); // 存一週的天氣
+  const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
   const [rainProbability, setRainProbability] = useState(50); // 降雨機率
   const [weatherCondition, setWeatherCondition] = useState('晴天'); // 天氣狀況
 
@@ -75,7 +75,6 @@ const App = () => {
       const locations = data.cwaopendata.dataset.location;
       
       for (let i = 0; i < locations.length; i++) {
-        // console.log(locations[i].locationName);
         if (locations[i].locationName == city) {
           console.log(locations[i].locationName);
           const locationData = locations[i];
@@ -83,15 +82,28 @@ const App = () => {
           const MaxTimeData = locationData.weatherElement[1].time; // MaxT
           const MinTimeData = locationData.weatherElement[2].time; // MinT
   
-          const weekData = MaxTimeData.map(item => {
+          let weekData = {};
+
+          MaxTimeData.forEach(item => {
             const date = new Date(item.startTime);
             const day = date.getDate();
-            return {
-              day: day,
-              high: item.parameter.parameterName,
-              low: MinTimeData.find(t => t.startTime === item.startTime).parameter.parameterName // MinT
-            };
+            if (!weekData[day] || weekData[day].high < item.parameter.parameterName) {
+              weekData[day] = { ...weekData[day], high: item.parameter.parameterName };
+              // console.log(weekData[day]);
+            }
           });
+
+          MinTimeData.forEach(item => {
+            const date = new Date(item.startTime);
+            const day = date.getDate();
+            if (!weekData[day] || !weekData[day].low || weekData[day].low > item.parameter.parameterName) {
+              weekData[day] = { ...weekData[day], low: item.parameter.parameterName };
+              // console.log(weekData[day]);
+            }
+            console.log(weekData[day]);
+          });
+
+          weekData = Object.keys(weekData).map(day => ({ day: day, ...weekData[day] }));
   
           setWeekData(weekData);
         }
@@ -169,8 +181,8 @@ const App = () => {
             <View style={styles.rightColumnTemperatureContainer}>
               <Text style={styles.temperatureTitle}>當日最高/最低溫度</Text>
               <View style={styles.temperatureTextContainer}>
-                <Text style={styles.lowestesttemperatureText}>{todayLow}°C</Text>
-                <Text style={styles.highesttemperatureText}>{todayHigh}°C</Text>
+                <Text style={styles.lowestesttemperatureText}>{todayHigh}°C</Text>
+                <Text style={styles.highesttemperatureText}>{todayLow}°C</Text>
               </View>
             </View>
           </View>
