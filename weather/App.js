@@ -79,17 +79,23 @@ const App = () => {
           console.log(locations[i].locationName);
           const locationData = locations[i];
   
+          const conditionData = locationData.weatherElement[0].time;  //Wx
           const MaxTimeData = locationData.weatherElement[1].time; // MaxT
           const MinTimeData = locationData.weatherElement[2].time; // MinT
   
           let weekData = {};
 
+          conditionData.forEach(item => {
+            const date = new Date(item.startTime);
+            const day = date.getDate();
+            weekData[day] = { ...weekData[day], condition: item.parameter.parameterName}
+          });
+
           MaxTimeData.forEach(item => {
             const date = new Date(item.startTime);
             const day = date.getDate();
-            if (!weekData[day] || weekData[day].high < item.parameter.parameterName) {
+            if (!weekData[day] || !weekData[day].high || weekData[day].high < item.parameter.parameterName) {
               weekData[day] = { ...weekData[day], high: item.parameter.parameterName };
-              // console.log(weekData[day]);
             }
           });
 
@@ -98,9 +104,8 @@ const App = () => {
             const day = date.getDate();
             if (!weekData[day] || !weekData[day].low || weekData[day].low > item.parameter.parameterName) {
               weekData[day] = { ...weekData[day], low: item.parameter.parameterName };
-              // console.log(weekData[day]);
             }
-            console.log(weekData[day]);
+
           });
 
           weekData = Object.keys(weekData).map(day => ({ day: day, ...weekData[day] }));
@@ -136,6 +141,9 @@ const App = () => {
       }
     ]
   };
+
+  const today = new Date().getDate();
+  const todayData = weekData.find(day => day.condition);
 
   // 當天最高/最低溫
   const dailyHighs = weekData.map(day => day.high);
@@ -199,7 +207,7 @@ const App = () => {
           <View style={styles.weatherInfoContainer}>
             <View style={styles.weatherConditionContainer}>
               <Text style={styles.temperatureTitle}>今日天氣狀況</Text>
-              <Text style={styles.weatherConditionText}>{weatherCondition}</Text>
+              <Text style={styles.weatherConditionText}>{todayData ? todayData.condition : 'N/A'}</Text>
             </View>
           </View>
 
