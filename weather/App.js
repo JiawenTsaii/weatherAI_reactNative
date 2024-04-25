@@ -47,67 +47,17 @@ const WeekdayTimePicker = ({ day }) => {
   );
 };
 
-const WeekdayTimePicker = ({ day }) => {
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-
-  const showTimePicker = () => {
-    setTimePickerVisibility(true);
-  };
-
-  const hideTimePicker = () => {
-    setTimePickerVisibility(false);
-  };
-
-  const handleConfirm = (time) => {
-    setSelectedTime(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })); // 格式化並設置所選擇的時間
-    hideTimePicker();
-  };
-
-  const handleSaveTime = () => {
-    // 在這裡可以將所選擇的時間存儲下來，這裡僅示範 Alert 顯示
-    Alert.alert('已選擇時間', `您選擇的${day}的時間是：${selectedTime}`);
-  };
-
-  return (
-    <View style={styles.weekdayTimePicker}>
-      <Text>{day}</Text>
-      <Button title="選擇時間" onPress={showTimePicker} />
-      {isTimePickerVisible && (
-        <DateTimePicker
-          mode="time"
-          value={new Date()}
-          onChange={(event, selectedDate) => handleConfirm(selectedDate)}
-        />
-      )}
-      {selectedTime && (
-        <Button title="確定提醒時間" onPress={handleSaveTime} />
-      )}
-    </View>
-  );
-};
-
 {/* main */}
 const App = () => {
   const [city, setCity] = useState('臺北市');
   const [temperature, setTemperature] = useState(25);
-  const [weekData, setWeekData] = useState([]); // 存一週的天氣
+  const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
   const [rainProbability, setRainProbability] = useState(50); // 降雨機率
   const [weatherCondition, setWeatherCondition] = useState('晴天'); // 天氣狀況
 
   const handleCityChange = (value) => {
     setCity(value);
   };
-  const [weekDataforalarm, setWeekDataforalarm] = useState([
-    { day: '周一', time: null },
-    { day: '周二', time: null },
-    { day: '周三', time: null },
-    { day: '周四', time: null },
-    { day: '周五', time: null },
-    { day: '周六', time: null },
-    { day: '周日', time: null }
-  ]);
-
 
   const [weekDataforalarm, setWeekDataforalarm] = useState([
     { day: '周一', time: null },
@@ -193,7 +143,7 @@ const App = () => {
   
           const RainData = locationData.weatherElement[1].time[0].parameter.parameterName;  //PoP
           setRainProbability(RainData);
-          console.log(RainData);
+          // console.log("RainData", RainData);
         }
       }
   
@@ -261,12 +211,6 @@ const App = () => {
               <Picker.Item label="南投縣" value="南投縣" />
             </Picker>
           </View>
-
-          {/* <View style={styles.body}>
-            <Text style={styles.temperatureText}>{temperature}°C</Text>
-            <Text style={styles.highesttemperatureText}>{randomTemperature}°C</Text>
-            <Text style={styles.lowestesttemperatureText}>{randomTemperature}°C</Text>
-          </View> */}
           
           {/* 溫度temperatureContainer */}       
           <View style={styles.temperatureContainer}>
@@ -297,7 +241,7 @@ const App = () => {
           <View style={styles.weatherInfoContainer}>
             <View style={styles.weatherConditionContainer}>
               <Text style={styles.temperatureTitle}>今日天氣狀況</Text>
-              <Text style={styles.weatherConditionText}>{weatherCondition}</Text>
+              <Text style={styles.weatherConditionText}>{todayData ? todayData.condition : 'N/A'}</Text>
             </View>
           </View>
 
@@ -325,7 +269,7 @@ const App = () => {
               style={styles.chart}
             />
           </View>
-        
+          
           {/* 時間設定weekdayTimePicker */}
           <View style={styles.weekdayTimePicker}>
             {weekData.map((item, index) => (
@@ -414,8 +358,5 @@ const styles = StyleSheet.create({
     marginTop: 20, // 與上方區塊的距離為 20 像素
   },
 });
-
-
-
 
 export default App;
