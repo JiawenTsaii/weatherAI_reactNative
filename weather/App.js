@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, View, Text, StyleSheet, Button, TextInput, CheckBox, Platform, TouchableOpacity, TouchableHighlight, TouchableWithoutFeedback, Alert} from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // picker備react native剔除(?)了所以莫名的要額外下載+額外import
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
+// import axios from 'axios';
+import crawler from './crawler.js';
 
-
-
+{/* 通知時間 */}
 const WeekdayTimePicker = ({ day }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -46,17 +47,18 @@ const WeekdayTimePicker = ({ day }) => {
   );
 };
 
-
+{/* main */}
 const App = () => {
   const [city, setCity] = useState('臺北市');
   const [temperature, setTemperature] = useState(25);
-  const [weekData, setWeekData] = useState([]); // 存一週的天氣
+  const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
   const [rainProbability, setRainProbability] = useState(50); // 降雨機率
   const [weatherCondition, setWeatherCondition] = useState('晴天'); // 天氣狀況
 
   const handleCityChange = (value) => {
     setCity(value);
   };
+
   const [weekDataforalarm, setWeekDataforalarm] = useState([
     { day: '周一', time: null },
     { day: '周二', time: null },
@@ -66,47 +68,97 @@ const App = () => {
     { day: '周六', time: null },
     { day: '周日', time: null }
   ]);
-
-
-  // 獲取一週的天氣
-  // const fetchWeekData = async () => {
-  //   try {
-  //     const response = await fetch('API_ENDPOINT_HERE');
-  //     const data = await response.json();
-  //     setWeekData(data);
-  //   } catch (error) {
-  //     console.error('Error fetching week data:', error);
-  //   }
-  // };
   
+  // 獲取一週的天氣
+  const fetchWeekData = async () => {
+    
+    // crawler();
+    
+    try {
+      const response = await fetch('https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/F-C0032-005?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6&downloadType=WEB&format=JSON');
+      const text = await response.text();
+      const data = JSON.parse(text);
+      
+      const locations = data.cwaopendata.dataset.location;
+      
+      for (let i = 0; i < locations.length; i++) {
+        if (locations[i].locationName == city) {
+          console.log(locations[i].locationName);
+          const locationData = locations[i];
+  
+          const conditionData = locationData.weatherElement[0].time;  //Wx
+          const MaxTimeData = locationData.weatherElement[1].time; // MaxT
+          const MinTimeData = locationData.weatherElement[2].time; // MinT
+  
+          let weekData = {};
 
-    // 一週的天氣
-    const fetchWeekData = async () => {
-      try {
-        // 模擬一週的天氣數據
-        const data = [
-          { day: '周一', high: 28, low: 15 },
-          { day: '周二', high: 30, low: 23 },
-          { day: '周三', high: 38, low: 13 },
-          { day: '周四', high: 20, low: 14 },
-          { day: '周五', high: 21, low: 17 },
-          { day: '周六', high: 29, low: 25 },
-          { day: '周日', high: 24, low: 10 }
-        ];
-        setWeekData(data);
-      } catch (error) {
-        console.error('Error fetching week data:', error);
+          conditionData.forEach(item => {
+            const date = new Date(item.startTime);
+            const day = date.getDate();
+            weekData[day] = { ...weekData[day], condition: item.parameter.parameterName}
+          });
+
+          MaxTimeData.forEach(item => {
+            const date = new Date(item.startTime);
+            const day = date.getDate();
+            if (!weekData[day] || !weekData[day].high || weekData[day].high < item.parameter.parameterName) {
+              weekData[day] = { ...weekData[day], high: item.parameter.parameterName };
+            }
+          });
+
+          MinTimeData.forEach(item => {
+            const date = new Date(item.startTime);
+            const day = date.getDate();
+            if (!weekData[day] || !weekData[day].low || weekData[day].low > item.parameter.parameterName) {
+              weekData[day] = { ...weekData[day], low: item.parameter.parameterName };
+            }
+
+          });
+
+          weekData = Object.keys(weekData).map(day => ({ day: day, ...weekData[day] }));
+  
+          setWeekData(weekData);
+        }
       }
-    };
+  
+    } catch (error) {
+  
+      console.error('Error fetching week data:', error);
+  
+    }
+  };
 
-  // 初次加載時獲取一週的天氣
-  useState(() => {
-    fetchWeekData();
-  }, []); // 空依賴陣列確保只會在初次加載時執行
+  const fetchRainData = async () => {
+    try {
+      const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6');
+      const text = await response.text();
+      const data = JSON.parse(text);
+      
+      const locations = data.records.location;
+      
+      for (let i = 0; i < locations.length; i++) {
+        if (locations[i].locationName == city) {
 
-  useState(() => {
+          const locationData = locations[i];
+  
+          const RainData = locationData.weatherElement[1].time[0].parameter.parameterName;  //PoP
+          setRainProbability(RainData);
+          // console.log("RainData", RainData);
+        }
+      }
+  
+    } catch (error) {
+  
+      console.error('Error fetching week data:', error);
+  
+    }
+  };
+
+  // 當 city 變量改變時，重新獲取數據
+  useEffect(() => {
     fetchWeekData();
-  }, []);
+    fetchRainData();
+  }, [city]); // 將 city 添加到依賴陣列
 
   const chartData = {
     labels: weekData.map((day) => day.day),
@@ -124,9 +176,14 @@ const App = () => {
     ]
   };
 
+  const today = new Date().getDate();
+  const todayData = weekData.find(day => day.condition);
 
-  // 固定溫度
-  const randomTemperature = 30;
+  {/* 當天最高/最低溫 */}
+  const dailyHighs = weekData.map(day => day.high);
+  const dailyLows = weekData.map(day => day.low);
+  const todayHigh = Math.max(...dailyHighs); // 找到今天的最高溫
+  const todayLow = Math.min(...dailyLows); // 找到今天的最低溫
 
   return (
     // ScrollView把整個return包起來超出畫面的部分才可以上下滑動查看
@@ -154,12 +211,6 @@ const App = () => {
               <Picker.Item label="南投縣" value="南投縣" />
             </Picker>
           </View>
-
-          {/* <View style={styles.body}>
-            <Text style={styles.temperatureText}>{temperature}°C</Text>
-            <Text style={styles.highesttemperatureText}>{randomTemperature}°C</Text>
-            <Text style={styles.lowestesttemperatureText}>{randomTemperature}°C</Text>
-          </View> */}
           
           {/* 溫度temperatureContainer */}       
           <View style={styles.temperatureContainer}>
@@ -172,8 +223,8 @@ const App = () => {
             <View style={styles.rightColumnTemperatureContainer}>
               <Text style={styles.temperatureTitle}>當日最高/最低溫度</Text>
               <View style={styles.temperatureTextContainer}>
-                <Text style={styles.lowestesttemperatureText}>{randomTemperature}°C</Text>
-                <Text style={styles.highesttemperatureText}>{randomTemperature}°C</Text>
+                <Text style={styles.lowestesttemperatureText}>{todayHigh}°C</Text>
+                <Text style={styles.highesttemperatureText}>{todayLow}°C</Text>
               </View>
             </View>
           </View>
@@ -190,7 +241,7 @@ const App = () => {
           <View style={styles.weatherInfoContainer}>
             <View style={styles.weatherConditionContainer}>
               <Text style={styles.temperatureTitle}>今日天氣狀況</Text>
-              <Text style={styles.weatherConditionText}>{weatherCondition}</Text>
+              <Text style={styles.weatherConditionText}>{todayData ? todayData.condition : 'N/A'}</Text>
             </View>
           </View>
 
@@ -218,10 +269,11 @@ const App = () => {
               style={styles.chart}
             />
           </View>
+          
           {/* 時間設定weekdayTimePicker */}
           <View style={styles.weekdayTimePicker}>
-            {weekData.map((item) => (
-              <WeekdayTimePicker key={item.day} day={item.day} />
+            {weekData.map((item, index) => (
+              <WeekdayTimePicker key={`${item.day}-${index}`} day={item.day} />
             ))}
           </View>
 
@@ -306,8 +358,5 @@ const styles = StyleSheet.create({
     marginTop: 20, // 與上方區塊的距離為 20 像素
   },
 });
-
-
-
 
 export default App;
