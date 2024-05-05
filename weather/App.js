@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ScrollView, View, Text, StyleSheet, Button, TextInput, CheckBox, Platform, TouchableOpacity, TouchableHighlight, TouchableWithoutFeedback, Alert} from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // picker備react native剔除(?)了所以莫名的要額外下載+額外import
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
-// import axios from 'axios';
-import crawler from './crawler.js';
+import { WebView } from 'react-native-webview';
+// import useCrawler from './useCrawler.js';
 
 {/* 通知時間 */}
 const WeekdayTimePicker = ({ day }) => {
@@ -49,6 +49,7 @@ const WeekdayTimePicker = ({ day }) => {
 
 {/* main */}
 const App = () => {
+
   const [city, setCity] = useState('臺北市');
   const [temperature, setTemperature] = useState(25);
   const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
@@ -71,9 +72,7 @@ const App = () => {
   
   // 獲取一週的天氣
   const fetchWeekData = async () => {
-    
-    // crawler();
-    
+
     try {
       const response = await fetch('https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/F-C0032-005?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6&downloadType=WEB&format=JSON');
       const text = await response.text();
@@ -128,7 +127,48 @@ const App = () => {
     }
   };
 
+  const useCrawler = () => {
+    const [data, setData] = useState(null);
+    const webViewRef = useRef(null); // 使用 useRef 創建 ref
+
+    console.log("useCrawler");
+  
+    // WebView 加載完成後執行的函數
+    const onLoad = () => {
+      // 在 WebView 中執行 JavaScript 代碼來抓取資料
+      const jsCode = `
+        // 在這裡放置你的 JavaScript 代碼
+        // 例如，獲取 id 為 example 的元素的文本內容
+        var element = document.getElementById('header');
+        element ? element.textContent.trim() : null;
+      `;
+      webViewRef.current.injectJavaScript(jsCode);
+    };
+  
+    // WebView 接收到消息時執行的函數
+    const onMessage = event => {
+      // 接收從 WebView 發送的消息
+      const receivedData = event.nativeEvent.data;
+      setData(receivedData);
+      // 在這裡可以進行資料處理或顯示
+      Alert.alert('資料', receivedData);
+    };
+  
+    return (
+      <View style={{ flex: 1 }}>
+        <WebView
+          ref={webViewRef}
+          source={{ uri: 'https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=6300300' }}
+          onLoad={onLoad}
+          onMessage={onMessage}
+        />
+        <Button title="重新加載" onPress={() => webViewRef.current.reload()} />
+      </View>
+    );
+  };
+
   const fetchRainData = async () => {
+
     try {
       const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWA-FADE6AC3-54FB-452F-BC9D-2A94204257D6');
       const text = await response.text();
@@ -156,6 +196,11 @@ const App = () => {
 
   // 當 city 變量改變時，重新獲取數據
   useEffect(() => {
+    const fetchData = async () => {
+      await useCrawler();
+    };
+
+    fetchData();
     fetchWeekData();
     fetchRainData();
   }, [city]); // 將 city 添加到依賴陣列
