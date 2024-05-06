@@ -3,8 +3,6 @@ import { View, Button, Alert, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 const useCrawler = ({ setTemperature, city }) => {
-  const [data, setData] = useState(null);
-  const [region, setRegion] = useState('台北市');
   const webViewRef = useRef(null); // 使用 useRef 創建 ref
 
   console.log("useCrawler");
