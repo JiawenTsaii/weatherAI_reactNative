@@ -188,7 +188,7 @@ const App = () => {
     // ScrollView把整個return包起來超出畫面的部分才可以上下滑動查看
     <ScrollView contentContainerStyle={styles.scrollView}>
         
-        <Crawler setTemperature={setTemperature}></Crawler>
+        <Crawler setTemperature={setTemperature} city={city}></Crawler>
         
         {/* 縣市選擇 */}
         <View style={styles.container}>

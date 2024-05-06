@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Button, Alert, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-const useCrawler = ({ setTemperature }) => {
+const useCrawler = ({ setTemperature, city }) => {
   const [data, setData] = useState(null);
   const [region, setRegion] = useState('台北市');
   const webViewRef = useRef(null); // 使用 useRef 創建 ref
@@ -29,6 +29,11 @@ const useCrawler = ({ setTemperature }) => {
     `;
     webViewRef.current.injectJavaScript(jsCode);
   };
+
+  useEffect(() => {
+    // 在 city 改變時重新加載資料
+    onLoad();
+  }, [city]);
 
   // WebView 接收到消息時執行的函數
   const onMessage = event => {
