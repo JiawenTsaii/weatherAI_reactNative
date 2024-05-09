@@ -54,7 +54,7 @@ const useCrawler = ({ setTemperature, city }) => {
         onLoad={onLoad}
         onMessage={onMessage}
       />
-      <Button title="重新加載" onPress={() => webViewRef.current.reload()} />
+      {/* <Button title="重新加載" onPress={() => webViewRef.current.reload()} /> */}
     </View>
   );
 };
