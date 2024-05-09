@@ -786,10 +786,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // 垂直方向居中對齊
     alignItems: 'center', // 水平方向居中對齊
   },
-  // citySelect: {
-  //   width: 200, // Picker 的寬度為 200 像素
-  //   height: 50, // Picker 的高度為 50 像素
-  // },
+  citySelect: {
+    width: 200, // Picker 的寬度為 200 像素
+    height: 50, // Picker 的高度為 50 像素
+  },
   temperatureContainer: {
     flexDirection: 'row', // 水平排列子元素
     justifyContent: 'space-around', // 子元素之間均勻分佈
