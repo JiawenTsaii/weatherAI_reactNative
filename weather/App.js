@@ -461,11 +461,6 @@ const WeekdayTimePicker = ({ day }) => {
     hideTimePicker();
   };
 
-  const handleSaveTime = () => {
-    // 在這裡可以將所選擇的時間存儲下來，這裡僅示範 Alert 顯示
-    Alert.alert('已選擇時間', `您選擇的${day}的時間是：${selectedTime}`);
-  };
-
   return (
     <View style={styles.weekdayTimePicker}>
       <Text>{day}</Text>
@@ -495,17 +490,21 @@ const App = () => {
   /* 選擇地區 */
   const [city, setCity] = useState('臺北市');
   const [district, setDistrict] = useState('');
-  const [citiesInRegion, setCitiesInRegion] = useState([]);
+  const [distInCity, setDistInCity] = useState([]);
+  const [TID, setTID] = useState('');
 
   const handleCityChange = (city) => {
     setCity(city);
-    setCitiesInRegion(cities[city]);
-    console.log("這邊是handleCityChange", citiesInRegion);
+    setDistInCity(cities[city]);
     setDistrict('');
   };
 
   const handleDistrictChange = (district) => {
     setDistrict(district);
+    setTID(distInCity[district]);
+    // console.log("distInCity", distInCity);
+    // console.log("district", district);
+    // console.log("distInCity[district]", distInCity[district]);
   };
 
   const [weekDataforalarm, setWeekDataforalarm] = useState([
@@ -637,7 +636,7 @@ const App = () => {
     // ScrollView把整個return包起來超出畫面的部分才可以上下滑動查看
     <ScrollView contentContainerStyle={styles.scrollView}>
         
-      <Crawler setTemperature={setTemperature} city={city}></Crawler>
+      <Crawler setTemperature={setTemperature} city={city} district={district} TID={TID}></Crawler>
       
       {/* 縣市選擇 */}
       <View style={styles.container}>
@@ -663,8 +662,7 @@ const App = () => {
               style={styles.picker}
             >
               <Picker.Item label="請選擇鄉鎮區" value="" />
-                {Object.keys(citiesInRegion).map((district) => (
-                  console.log("這邊是Picker", district),
+                {Object.keys(distInCity).map((district) => (
                   <Picker.Item
                     key={district}
                     label={district}
@@ -756,7 +754,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20, // 新增水平方向的內邊距
-    paddingTop: 150, // 增加上邊距，讓這部分在最上方
+    paddingTop: 50, // 增加上邊距，讓這部分在最上方
   },
   pickerContainer: {
     flexDirection: 'row', // 讓兩個 Picker 橫向排列

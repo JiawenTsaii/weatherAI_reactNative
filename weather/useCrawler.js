@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Button, Alert, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-const useCrawler = ({ setTemperature, city }) => {
+const useCrawler = ({ setTemperature, city, district, TID }) => {
   const webViewRef = useRef(null); // 使用 useRef 創建 ref
-
-  console.log("useCrawler");
+  const [source, setSource] = useState({ uri: `https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=${TID}` });
+  // console.log("TID", TID);
 
   // WebView 加載完成後執行的函數
   const onLoad = () => {
@@ -29,32 +29,29 @@ const useCrawler = ({ setTemperature, city }) => {
   };
 
   useEffect(() => {
-    // 在 city 改變時重新加載資料
+    setSource({ uri: `https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=${TID}` });
     onLoad();
-  }, [city]);
+  }, [TID]);
 
   // WebView 接收到消息時執行的函數
   const onMessage = event => {
     // 接收從 WebView 發送的消息
     const receivedData = JSON.parse(event.nativeEvent.data);
     console.log("receivedData", receivedData);
-    // 從接收到的資料中提取兩個值
     const tem = receivedData.tem;
     setTemperature(parseInt(tem));
     const area = receivedData.area;
-    // 處理或顯示兩個值
-    Alert.alert(`${area}`, `${tem}`);
+    // Alert.alert(`${area}`, `${tem}`);
   };
 
   return (
     <View style={styles.header}>
       <WebView
         ref={webViewRef}
-        source={{ uri: 'https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=6300300' }}
+        source={source}
         onLoad={onLoad}
         onMessage={onMessage}
       />
-      {/* <Button title="重新加載" onPress={() => webViewRef.current.reload()} /> */}
     </View>
   );
 };
