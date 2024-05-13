@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker'; // picker備react native�
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
 import Crawler from './useCrawler.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 {/* 鄉鎮市區 */}
 const cities = {
@@ -461,9 +462,38 @@ const WeekdayTimePicker = ({ day }) => {
     hideTimePicker();
   };
 
+  // const handleSaveTime = () => {
+  //   // 在這裡可以將所選擇的時間存儲下來，這裡僅示範 Alert 顯示
+  //   Alert.alert('已選擇時間', `您選擇的${day}的時間是：${selectedTime}`);
+  // };
+  const [weekDataforalarm, setWeekDataforalarm] = useState([
+    { day: '週一', time: null },
+    { day: '週二', time: null },
+    { day: '週三', time: null },
+    { day: '週四', time: null },
+    { day: '週五', time: null },
+    { day: '週六', time: null },
+    { day: '週日', time: null }
+  ]);
+
+  const handleSaveTime = async () => {
+    try {
+      // 將選擇的時間轉換成字符串格式
+      const timeData = JSON.stringify(weekDataforalarm);
+      // AsyncStorage 使用'weekDataforalarm'識別您保存的數據
+      await AsyncStorage.setItem('weekDataforalarm', timeData);
+      // 提示用戶數據已成功保存
+      Alert.alert('保存成功', '您選擇的時間已成功保存到本地。');
+    } catch (error) {
+      // 如果保存數據時發生錯誤顯示錯誤消息
+      console.error('保存時間數據時出錯:', error);
+      Alert.alert('保存失敗', '保存時間數據時出錯，請稍後重試。');
+    }
+  };
+
   return (
     <View style={styles.weekdayTimePicker}>
-      <Text>{day}</Text>
+      <Text>{day}</Text>  
       <Button title="選擇時間" onPress={showTimePicker} />
       {isTimePickerVisible && (
         <DateTimePicker
@@ -478,6 +508,7 @@ const WeekdayTimePicker = ({ day }) => {
     </View>
   );
 };
+
 
 {/* main */}
 const App = () => {
@@ -507,15 +538,17 @@ const App = () => {
     // console.log("distInCity[district]", distInCity[district]);
   };
 
-  const [weekDataforalarm, setWeekDataforalarm] = useState([
-    { day: '周一', time: null },
-    { day: '周二', time: null },
-    { day: '周三', time: null },
-    { day: '周四', time: null },
-    { day: '周五', time: null },
-    { day: '周六', time: null },
-    { day: '周日', time: null }
-  ]);
+  const weekdays = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+
+  // const [weekDataforalarm, setWeekDataforalarm] = useState([
+  //   { day: '週一', time: null },
+  //   { day: '週二', time: null },
+  //   { day: '週三', time: null },
+  //   { day: '週四', time: null },
+  //   { day: '週五', time: null },
+  //   { day: '週六', time: null },
+  //   { day: '週日', time: null }
+  // ]);
   
   // 獲取一週的天氣
   const fetchWeekData = async () => {
@@ -606,6 +639,28 @@ const App = () => {
     fetchWeekData();
     fetchRainData();
   }, [city]); // 將 city 添加到依賴陣列
+
+  // 本地時間數據的 useEffect
+  useEffect(() => {
+    const loadTimeData = async () => {
+      try {
+        // 從本地存儲中讀取所保存的時間數據
+        const storedData = await AsyncStorage.getItem('weekDataforalarm');
+        if (storedData !== null) {
+          // 如果找到本地數據，轉換為對象格式並設置為狀態
+          setWeekDataforalarm(JSON.parse(storedData));
+        } else {
+          // 如果沒有找到本地數據，您可以執行相應的處理邏輯，例如顯示默認值
+          console.log('找不到本地時間數據。');
+        }
+      } catch (error) {
+        // 如果讀取本地數據時發生錯誤，請記錄錯誤消息
+        console.error('讀取時間數據時出錯:', error);
+      }
+    };
+    // 調用函數加載本地時間數據
+    loadTimeData();
+  }, []);
 
   const chartData = {
     labels: weekData.map((day) => day.day),
@@ -734,10 +789,11 @@ const App = () => {
       
       {/* 時間設定weekdayTimePicker */}
       <View style={styles.weekdayTimePicker}>
-        {weekData.map((item, index) => (
-          <WeekdayTimePicker key={`${item.day}-${index}`} day={item.day} />
-        ))}
+      {weekData.map((item, index) => (
+        <WeekdayTimePicker key={`${item.day}-${index}`} day={weekdays[index]} />
+        ))} 
       </View>
+
 
     </ScrollView>
     
