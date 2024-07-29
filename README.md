@@ -1,7 +1,7 @@
 # React Native - setup
 ---
 - download Expo CLI：`npm install -g expo-cli` <br>
-- initialize (expo-cli) : `npx expo init <project_name>`
+- initialize (expo-cli) : `npx expo init <project_name>` (或是 `expo init`)
 選擇template時，選擇了 `blank`。<br>
 
 - 執行 : `npx start` <br>

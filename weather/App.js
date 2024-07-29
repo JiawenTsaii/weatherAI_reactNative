@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ScrollView, View, Text, StyleSheet, Button, TextInput, CheckBox, Platform, TouchableOpacity, TouchableHighlight, TouchableWithoutFeedback, Alert} from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Button, Alert, Modal, TouchableHighlight} from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // picker備react native剔除(?)了所以莫名的要額外下載+額外import
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
 
 import Crawler from './useCrawler.js';
 import cities from './selectCity.js';
+import * as knowledge from './weatherKnow.json';
 
 {/* 通知時間 */}
 const WeekdayTimePicker = ({ day }) => {
@@ -26,10 +28,6 @@ const WeekdayTimePicker = ({ day }) => {
     hideTimePicker();
   };
 
-  // const handleSaveTime = () => {
-  //   // 在這裡可以將所選擇的時間存儲下來，這裡僅示範 Alert 顯示
-  //   Alert.alert('已選擇時間', `您選擇的${day}的時間是：${selectedTime}`);
-  // };
   const [weekDataforalarm, setWeekDataforalarm] = useState([
     { day: '週一', time: null },
     { day: '週二', time: null },
@@ -76,6 +74,8 @@ const WeekdayTimePicker = ({ day }) => {
 
 {/* main */}
 const App = () => {
+  // console.log(moment().format("MM-DD"));  // 日期: 06-19
+  const [modalVisible, setModalVisible] = useState(false);
 
   const [temperature, setTemperature] = useState(25);
   const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
@@ -97,22 +97,9 @@ const App = () => {
   const handleDistrictChange = (district) => {
     setDistrict(district);
     setTID(distInCity[district]);
-    // console.log("distInCity", distInCity);
-    // console.log("district", district);
-    // console.log("distInCity[district]", distInCity[district]);
   };
 
   const weekdays = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-
-  // const [weekDataforalarm, setWeekDataforalarm] = useState([
-  //   { day: '週一', time: null },
-  //   { day: '週二', time: null },
-  //   { day: '週三', time: null },
-  //   { day: '週四', time: null },
-  //   { day: '週五', time: null },
-  //   { day: '週六', time: null },
-  //   { day: '週日', time: null }
-  // ]);
   
   // 獲取一週的天氣
   const fetchWeekData = async () => {
@@ -187,7 +174,6 @@ const App = () => {
   
           const RainData = locationData.weatherElement[1].time[0].parameter.parameterName;  //PoP
           setRainProbability(RainData);
-          // console.log("RainData", RainData);
         }
       }
   
@@ -242,7 +228,10 @@ const App = () => {
     ]
   };
 
-  const today = new Date().getDate();
+  const today_month = (new Date().getMonth() + 1).toString();
+  const today_day = new Date().getDate().toString();
+  const today = today_month + today_day;
+
   const todayData = weekData.find(day => day.condition);
 
   {/* 當天最高/最低溫 */}
@@ -251,9 +240,46 @@ const App = () => {
   const todayHigh = Math.max(...dailyHighs); // 找到今天的最高溫
   const todayLow = Math.min(...dailyLows); // 找到今天的最低溫
 
+  const word = knowledge.SolarTerms['729'];
+
+  // 彈出小知識視窗
+  useEffect(() => {
+    setModalVisible(true);
+  }, []);
+
   return (
     // ScrollView把整個return包起來超出畫面的部分才可以上下滑動查看
     <ScrollView contentContainerStyle={styles.scrollView}>
+
+      <View style={styles.centeredView}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(!modalVisible);
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+
+              {/* 提示框裡的字 */}
+              <Text style={styles.modalText}>{word}</Text>
+
+              {/* 關閉按鈕 */}
+              <TouchableHighlight
+                style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
+                onPress={() => {
+                  setModalVisible(!modalVisible);
+                }} 
+              >
+                <Text style={styles.textStyle}>Hide Modal</Text>
+              </TouchableHighlight>
+
+            </View>
+          </View>
+        </Modal>
+      </View>
         
       <Crawler setTemperature={setTemperature} city={city} district={district} TID={TID}></Crawler>
       
@@ -437,6 +463,42 @@ const styles = StyleSheet.create({
   weekdayTimePicker: {
     alignItems: 'center',
     marginTop: 20,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5
+  },
+  openButton: {
+    backgroundColor: "#F194FF",
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
   },
 });
 
