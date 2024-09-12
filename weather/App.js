@@ -74,8 +74,6 @@ const WeekdayTimePicker = ({ day }) => {
 
 {/* main */}
 const App = () => {
-  // console.log(moment().format("MM-DD"));  // 日期: 06-19
-  const [modalVisible, setModalVisible] = useState(false);
 
   const [temperature, setTemperature] = useState(25);
   const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
@@ -240,11 +238,98 @@ const App = () => {
   const todayHigh = Math.max(...dailyHighs); // 找到今天的最高溫
   const todayLow = Math.min(...dailyLows); // 找到今天的最低溫
 
-  const word = knowledge.SolarTerms['729'];
-
   // 彈出小知識視窗
+  
+  const [modalVisible, setModalVisible] = useState(false);
+  // const word = knowledge.SolarTerms['twotwofour'];
+  const [modalWord, setModalWord] = useState(knowledge.SolarTerms['twotwofour']);
+
   useEffect(() => {
-    setModalVisible(true);
+
+    // 獲取當前日期
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // 月份從0開始，所以要+1
+    const currentDay = currentDate.getDate();
+
+    // 判斷
+    if (currentMonth === 2 && currentDay === 4) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['204']);
+    } else if (currentMonth === 2 && currentDay === 19) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['219']);
+    } else if (currentMonth === 3 && currentDay === 5) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['305']);
+    } else if (currentMonth === 3 && currentDay === 20) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['320']);
+    } else if (currentMonth === 4 && currentDay === 5) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['405']);
+    } else if (currentMonth === 4 && currentDay === 20) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['420']);
+    } else if (currentMonth === 5 && currentDay === 5) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['505']);
+    } else if (currentMonth === 5 && currentDay === 21) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['521']);
+    } else if (currentMonth === 6 && currentDay === 6) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['606']);
+    } else if (currentMonth === 6 && currentDay === 21) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['621']);
+    } else if (currentMonth === 7 && currentDay === 7) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['707']);
+    } else if (currentMonth === 7 && currentDay === 23) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['723']);
+    } else if (currentMonth === 8 && currentDay === 7) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['807']);
+    } else if (currentMonth === 8 && currentDay === 23) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['823']);
+    } else if (currentMonth === 9 && currentDay === 7) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['907']);
+    } else if (currentMonth === 9 && currentDay === 23) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['923']);
+    } else if (currentMonth === 10 && currentDay === 8) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['1008']);
+    } else if (currentMonth === 10 && currentDay === 23) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['1023']);
+    } else if (currentMonth === 11 && currentDay === 7) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['1107']);
+    } else if (currentMonth === 11 && currentDay === 22) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['1122']);
+    } else if (currentMonth === 12 && currentDay === 7) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['1207']);
+    } else if (currentMonth === 12 && currentDay === 22) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['1222']);
+    } else if (currentMonth === 1 && currentDay === 5) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['105']);
+    } else if (currentMonth === 1 && currentDay === 20) {
+      setModalVisible(true);
+      setModalWord(knowledge.SolarTerms['120']);
+    } else {
+      setModalVisible(true);  //待刪
+      // setModalVisible(false);
+      setModalWord(knowledge.SolarTerms['test']);  //待刪
+    }
+
   }, []);
 
   return (
@@ -264,7 +349,7 @@ const App = () => {
             <View style={styles.modalView}>
 
               {/* 提示框裡的字 */}
-              <Text style={styles.modalText}>{word}</Text>
+              <Text style={styles.modalText}>{modalWord}</Text>
 
               {/* 關閉按鈕 */}
               <TouchableHighlight
