@@ -162,15 +162,56 @@ export interface FileSystem {
   getAllFiles(): Path[];
   getDependencies(file: Path): string[] | null;
   getModuleName(file: Path): string | null;
-  getRealPath(file: Path): string | null;
   getSerializableSnapshot(): FileData;
   getSha1(file: Path): string | null;
+
+  /**
+   * Given a start path (which need not exist), a subpath and type, and
+   * optionally a 'breakOnSegment', performs the following:
+   *
+   * X = mixedStartPath
+   * do
+   *   if basename(X) === opts.breakOnSegment
+   *     return null
+   *   if X + subpath exists and has type opts.subpathType
+   *     return {
+   *       absolutePath: realpath(X + subpath)
+   *       containerRelativePath: relative(mixedStartPath, X)
+   *     }
+   *   X = dirname(X)
+   * while X !== dirname(X)
+   *
+   * If opts.invalidatedBy is given, collects all absolute, real paths that if
+   * added or removed may invalidate this result.
+   *
+   * Useful for finding the closest package scope (subpath: package.json,
+   * type f, breakOnSegment: node_modules) or closest potential package root
+   * (subpath: node_modules/pkg, type: d) in Node.js resolution.
+   */
+  hierarchicalLookup(
+    mixedStartPath: string,
+    subpath: string,
+    opts: {
+      breakOnSegment: string | null | undefined;
+      invalidatedBy: Set<string> | null | undefined;
+      subpathType: 'f' | 'd';
+    },
+  ): {
+    absolutePath: string;
+    containerRelativePath: string;
+  } | null;
 
   /**
    * Analogous to posix lstat. If the file at `file` is a symlink, return
    * information about the symlink without following it.
    */
   linkStats(file: Path): FileStats | null;
+
+  /**
+   * Return information about the given path, whether a directory or file.
+   * Always follow symlinks, and return a real path if it exists.
+   */
+  lookup(mixedPath: Path): LookupResult;
 
   matchFiles(opts: {
     /* Filter relative paths against a pattern. */
@@ -189,6 +230,29 @@ export interface FileSystem {
 }
 
 export type Glob = string;
+
+export type LookupResult =
+  | {
+      // The node is missing from the FileSystem implementation (note this
+      // could indicate an unwatched path, or a directory containing no watched
+      // files).
+      exists: false;
+      // The real, normal, absolute paths of any symlinks traversed.
+      links: ReadonlySet<string>;
+      // The real, normal, absolute path of the first path segment
+      // encountered that does not exist, or cannot be navigated through.
+      missing: string;
+    }
+  | {
+      exists: true;
+      // The real, normal, absolute paths of any symlinks traversed.
+      links: ReadonlySet<string>;
+      // The real, normal, absolute path of the file or directory.
+      realPath: string;
+      // Currently lookup always follows symlinks, so can only return
+      // directories or regular files, but this may be extended.
+      type: 'd' | 'f';
+    };
 
 export interface HasteMap {
   getModule(
