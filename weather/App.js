@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ScrollView, View, Text, StyleSheet, Button, Alert, Modal, TouchableHighlight} from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Button, Alert, Modal, TouchableHighlight, Image} from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // picker備react native剔除(?)了所以莫名的要額外下載+額外import
 import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import moment from 'moment';
 import { Audio } from 'expo-av';
 
 import Crawler from './useCrawler.js';
@@ -12,65 +11,65 @@ import cities from './selectCity.js';
 import * as knowledge from './weatherKnow.json';
 
 {/* 通知時間 */}
-const WeekdayTimePicker = ({ day }) => {
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+// const WeekdayTimePicker = ({ day }) => {
+//   const [selectedTime, setSelectedTime] = useState(null);
+//   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
 
-  const showTimePicker = () => {
-    setTimePickerVisibility(true);
-  };
+//   const showTimePicker = () => {
+//     setTimePickerVisibility(true);
+//   };
 
-  const hideTimePicker = () => {
-    setTimePickerVisibility(false);
-  };
+//   const hideTimePicker = () => {
+//     setTimePickerVisibility(false);
+//   };
 
-  const handleConfirm = (time) => {
-    setSelectedTime(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })); // 格式化並設置所選擇的時間
-    hideTimePicker();
-  };
+//   const handleConfirm = (time) => {
+//     setSelectedTime(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })); // 格式化並設置所選擇的時間
+//     hideTimePicker();
+//   };
 
-  const [weekDataforalarm, setWeekDataforalarm] = useState([
-    { day: '週一', time: null },
-    { day: '週二', time: null },
-    { day: '週三', time: null },
-    { day: '週四', time: null },
-    { day: '週五', time: null },
-    { day: '週六', time: null },
-    { day: '週日', time: null }
-  ]);
+//   const [weekDataforalarm, setWeekDataforalarm] = useState([
+//     { day: '週一', time: null },
+//     { day: '週二', time: null },
+//     { day: '週三', time: null },
+//     { day: '週四', time: null },
+//     { day: '週五', time: null },
+//     { day: '週六', time: null },
+//     { day: '週日', time: null }
+//   ]);
 
-  const handleSaveTime = async () => {
-    try {
-      // 將選擇的時間轉換成字符串格式
-      const timeData = JSON.stringify(weekDataforalarm);
-      // AsyncStorage 使用'weekDataforalarm'識別您保存的數據
-      await AsyncStorage.setItem('weekDataforalarm', timeData);
-      // 提示用戶數據已成功保存
-      Alert.alert('保存成功', '您選擇的時間已成功保存到本地。');
-    } catch (error) {
-      // 如果保存數據時發生錯誤顯示錯誤消息
-      console.error('保存時間數據時出錯:', error);
-      Alert.alert('保存失敗', '保存時間數據時出錯，請稍後重試。');
-    }
-  };
+//   const handleSaveTime = async () => {
+//     try {
+//       // 將選擇的時間轉換成字符串格式
+//       const timeData = JSON.stringify(weekDataforalarm);
+//       // AsyncStorage 使用'weekDataforalarm'識別您保存的數據
+//       await AsyncStorage.setItem('weekDataforalarm', timeData);
+//       // 提示用戶數據已成功保存
+//       Alert.alert('保存成功', '您選擇的時間已成功保存到本地。');
+//     } catch (error) {
+//       // 如果保存數據時發生錯誤顯示錯誤消息
+//       console.error('保存時間數據時出錯:', error);
+//       Alert.alert('保存失敗', '保存時間數據時出錯，請稍後重試。');
+//     }
+//   };
 
-  return (
-    <View style={styles.weekdayTimePicker}>
-      <Text>{day}</Text>  
-      <Button title="選擇時間" onPress={showTimePicker} />
-      {isTimePickerVisible && (
-        <DateTimePicker
-          mode="time"
-          value={new Date()}
-          onChange={(event, selectedDate) => handleConfirm(selectedDate)}
-        />
-      )}
-      {selectedTime && (
-        <Button title="確定提醒時間" onPress={handleSaveTime} />
-      )}
-    </View>
-  );
-};
+//   return (
+//     <View style={styles.weekdayTimePicker}>
+//       <Text>{day}</Text>  
+//       <Button title="選擇時間" onPress={showTimePicker} />
+//       {isTimePickerVisible && (
+//         <DateTimePicker
+//           mode="time"
+//           value={new Date()}
+//           onChange={(event, selectedDate) => handleConfirm(selectedDate)}
+//         />
+//       )}
+//       {selectedTime && (
+//         <Button title="確定提醒時間" onPress={handleSaveTime} />
+//       )}
+//     </View>
+//   );
+// };
 
 
 {/* main */}
@@ -96,6 +95,19 @@ const App = () => {
   const handleDistrictChange = (district) => {
     setDistrict(district);
     setTID(distInCity[district]);
+  };
+
+  // 初始設定推薦衣物氣溫的參數
+  const [summerFitTemperature, setSummerFitTemperature] = useState(25);
+  const [winterFitTemperature, setWinterFitTemperature] = useState(20);
+
+  // 推薦衣物溫度
+  const adjustRecommendation = (type) => {
+    if (temperature >= summerFitTemperature && type === 'hot') {
+      setSummerFitTemperature(summerFitTemperature - 1);
+    } else if (temperature <= winterFitTemperature && type === 'cold') {
+      setWinterFitTemperature(winterFitTemperature + 1);
+    }
   };
 
   const weekdays = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
@@ -240,10 +252,8 @@ const App = () => {
   const todayLow = Math.min(...dailyLows); // 找到今天的最低溫
 
   // 彈出小知識視窗
-  
   const [modalVisible, setModalVisible] = useState(false);
-  // const word = knowledge.SolarTerms['twotwofour'];
-  const [modalWord, setModalWord] = useState(knowledge.SolarTerms['twotwofour']);
+  const [modalWord, setModalWord] = useState('');
 
   useEffect(() => {
 
@@ -326,14 +336,14 @@ const App = () => {
       setModalVisible(true);
       setModalWord(knowledge.SolarTerms['120']);
     } else {
-      setModalVisible(true);  //待刪
-      // setModalVisible(false);
-      setModalWord(knowledge.SolarTerms['test']);  //待刪
+      // setModalVisible(true);  //待刪
+      setModalVisible(false);
+      // setModalWord(knowledge.SolarTerms['test']);  //待刪
     }
 
   }, []);
 
-  /* 背景音樂 */
+  // 背景音樂
   const sound = new Audio.Sound();
 
   useEffect(() => {
@@ -444,9 +454,36 @@ const App = () => {
           </View>
         </View>
       </View>
+
+      {/* 推薦衣服 */}
+      <View style={styles.clothingRecommendationContainer}>
+        <Text style={styles.recommendationTitle}>推薦衣服</Text>
+        {temperature >= summerFitTemperature ? (
+          <View style={styles.imageContainer}>
+            <Image source={require('./assets/tshirt.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/shorts.png')} style={styles.clothingImage} />
+          </View>
+        ) : temperature <= winterFitTemperature ? (
+          <View style={styles.imageContainer}>
+            <Image source={require('./assets/sweater.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/pants.png')} style={styles.clothingImage} />
+          </View>
+        ) : (
+          <View style={styles.imageContainer}>
+            <Image source={require('./assets/tshirt.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/shorts.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/jacket.png')} style={styles.clothingImage} />
+          </View>
+        )}
+        <View style={styles.buttonContainer}>
+          <Button title="太冷 🥶" onPress={() => adjustRecommendation('cold')} />
+          <Button title="完美 🥳" onPress={() => adjustRecommendation("perfect")} />
+          <Button title="太熱 🥵" onPress={() => adjustRecommendation('hot')} />
+        </View>
+      </View>
       
       {/* 降雨機率weatherInfoContainer */}
-      <View style={styles.weatherInfoContainer}>
+      <View style={styles.weatherInfoContainer1}>
         <View style={styles.middleColumn}>
             <Text style={styles.temperatureTitle}>目前降雨機率</Text>
             <Text style={styles.temperatureText}>{rainProbability}%</Text>
@@ -454,7 +491,7 @@ const App = () => {
       </View>
 
       {/* 天氣狀況weatherInfoContainer */}
-      <View style={styles.weatherInfoContainer}>
+      <View style={styles.weatherInfoContainer2}>
         <View style={styles.weatherConditionContainer}>
           <Text style={styles.temperatureTitle}>今日天氣狀況</Text>
           <Text style={styles.weatherConditionText}>{todayData ? todayData.condition : 'N/A'}</Text>
@@ -487,11 +524,11 @@ const App = () => {
       </View>
       
       {/* 時間設定weekdayTimePicker */}
-      <View style={styles.weekdayTimePicker}>
+      {/* <View style={styles.weekdayTimePicker}>
       {weekData.map((item, index) => (
         <WeekdayTimePicker key={`${item.day}-${index}`} day={weekdays[index]} />
         ))} 
-      </View>
+      </View> */}
 
 
     </ScrollView>
@@ -526,6 +563,8 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 16,
   },
+
+  // 當日氣溫、最高最低溫
   temperatureContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -557,22 +596,72 @@ const styles = StyleSheet.create({
   temperatureText: {
     fontSize: 24,
   },
-  weatherInfoContainer: {
+
+  // 推薦衣物
+  clothingRecommendationContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center'
+  },
+  recommendationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8
+  },
+  recommendationText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 16
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  
+  // 推薦衣服的圖片
+  imageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16
+  },
+  clothingImage: {
+    width: 100,  // 調整圖片寬度
+    height: 100, // 調整圖片高度
+    resizeMode: 'contain', // 確保圖片不變形
+    marginHorizontal: 10 // 圖片之間的間距
+  },
+
+  // 天氣資訊1
+  weatherInfoContainer1: {
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: 'blue',
-    borderWidth: 1,
     padding: 10,
     marginTop: 20,
   },
+
+  // 天氣資訊2
+  weatherInfoContainer2: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    marginTop: 20,
+    backgroundColor: '#f0f0f0',
+  },
+
+  // 折線圖
   temperatureChartContainer: {
     alignItems: 'center',
     marginTop: 20,
   },
+
+  // 時間選擇
   weekdayTimePicker: {
     alignItems: 'center',
     marginTop: 20,
   },
+  
   centeredView: {
     flex: 1,
     justifyContent: "center",
