@@ -5,6 +5,8 @@ import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
 import Crawler from './useCrawler.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'react-native';
+
 
 {/* 鄉鎮市區 */}
 const cities = {
@@ -444,6 +446,8 @@ const cities = {
 
 };
 
+
+
 {/* 通知時間 */}
 const WeekdayTimePicker = ({ day }) => {
   const [selectedTime, setSelectedTime] = useState(null);
@@ -491,6 +495,7 @@ const WeekdayTimePicker = ({ day }) => {
     }
   };
 
+
   return (
     <View style={styles.weekdayTimePicker}>
       <Text>{day}</Text>  
@@ -513,12 +518,13 @@ const WeekdayTimePicker = ({ day }) => {
 {/* main */}
 const App = () => {
 
+  // 初始設定
   const [temperature, setTemperature] = useState(25);
   const [weekData, setWeekData] = useState([0, 0, 0, 0, 0]); // 存一週的天氣
   const [rainProbability, setRainProbability] = useState(50); // 降雨機率
   const [weatherCondition, setWeatherCondition] = useState('晴天'); // 天氣狀況
   
-  /* 選擇地區 */
+  /* 初始設定選擇地區 */
   const [city, setCity] = useState('臺北市');
   const [district, setDistrict] = useState('');
   const [distInCity, setDistInCity] = useState([]);
@@ -538,17 +544,32 @@ const App = () => {
     // console.log("distInCity[district]", distInCity[district]);
   };
 
+  // 初始設定推薦衣物氣溫的參數
+  const [summerFitTemperature, setSummerFitTemperature] = useState(25);
+  const [winterFitTemperature, setWinterFitTemperature] = useState(20);
+
+  // 推薦衣物溫度
+  const adjustRecommendation = (type) => {
+    if (temperature >= summerFitTemperature && type === 'hot') {
+      setSummerFitTemperature(summerFitTemperature - 1);
+    } else if (temperature <= winterFitTemperature && type === 'cold') {
+      setWinterFitTemperature(winterFitTemperature + 1);
+    }
+  };
+  
+
+
   const weekdays = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
 
-  // const [weekDataforalarm, setWeekDataforalarm] = useState([
-  //   { day: '週一', time: null },
-  //   { day: '週二', time: null },
-  //   { day: '週三', time: null },
-  //   { day: '週四', time: null },
-  //   { day: '週五', time: null },
-  //   { day: '週六', time: null },
-  //   { day: '週日', time: null }
-  // ]);
+  const [weekDataforalarm, setWeekDataforalarm] = useState([
+    { day: '週一', time: null },
+    { day: '週二', time: null },
+    { day: '週三', time: null },
+    { day: '週四', time: null },
+    { day: '週五', time: null },
+    { day: '週六', time: null },
+    { day: '週日', time: null }
+  ]);
   
   // 獲取一週的天氣
   const fetchWeekData = async () => {
@@ -745,9 +766,38 @@ const App = () => {
           </View>
         </View>
       </View>
-      
+
+
+      {/* 推薦衣服 */}
+      <View style={styles.clothingRecommendationContainer}>
+        <Text style={styles.recommendationTitle}>推薦衣服</Text>
+        {temperature >= summerFitTemperature ? (
+          <View style={styles.imageContainer}>
+            <Image source={require('./assets/tshirt.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/shorts.png')} style={styles.clothingImage} />
+          </View>
+        ) : temperature <= winterFitTemperature ? (
+          <View style={styles.imageContainer}>
+            <Image source={require('./assets/sweater.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/pants.png')} style={styles.clothingImage} />
+          </View>
+        ) : (
+          <View style={styles.imageContainer}>
+            <Image source={require('./assets/tshirt.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/shorts.png')} style={styles.clothingImage} />
+            <Image source={require('./assets/jacket.png')} style={styles.clothingImage} />
+          </View>
+        )}
+        <View style={styles.buttonContainer}>
+          <Button title="太冷 🥶" onPress={() => adjustRecommendation('cold')} />
+          <Button title="完美 🥳" onPress={() => adjustRecommendation("perfect")} />
+          <Button title="太熱 🥵" onPress={() => adjustRecommendation('hot')} />
+        </View>
+      </View>
+
+            
       {/* 降雨機率weatherInfoContainer */}
-      <View style={styles.weatherInfoContainer}>
+      <View style={styles.weatherInfoContainer1}>
         <View style={styles.middleColumn}>
             <Text style={styles.temperatureTitle}>目前降雨機率</Text>
             <Text style={styles.temperatureText}>{rainProbability}%</Text>
@@ -755,7 +805,7 @@ const App = () => {
       </View>
 
       {/* 天氣狀況weatherInfoContainer */}
-      <View style={styles.weatherInfoContainer}>
+      <View style={styles.weatherInfoContainer2}>
         <View style={styles.weatherConditionContainer}>
           <Text style={styles.temperatureTitle}>今日天氣狀況</Text>
           <Text style={styles.weatherConditionText}>{todayData ? todayData.condition : 'N/A'}</Text>
@@ -827,6 +877,8 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 16,
   },
+
+  // 當日氣溫、最高最低溫
   temperatureContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -858,19 +910,73 @@ const styles = StyleSheet.create({
   temperatureText: {
     fontSize: 24,
   },
-  weatherInfoContainer: {
+
+  // 推薦衣物
+  clothingRecommendationContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center'
+  },
+  recommendationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8
+  },
+  recommendationText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 16
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  
+  // 推薦衣服的圖片
+  imageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16
+  },
+  clothingImage: {
+    width: 100,  // 調整圖片寬度
+    height: 100, // 調整圖片高度
+    resizeMode: 'contain', // 確保圖片不變形
+    marginHorizontal: 10 // 圖片之間的間距
+  },
+
+  // 天氣資訊1
+  weatherInfoContainer1: {
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: 'blue',
-    borderWidth: 1,
+    // borderColor: 'blue',
+    // borderWidth: 1,
     padding: 10,
     marginTop: 20,
   },
+    // 天氣資訊2
+    weatherInfoContainer2: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      // borderColor: 'blue',
+      // borderWidth: 1,
+      padding: 10,
+      marginTop: 20,
+      backgroundColor: '#f0f0f0',
+    },
+  
+  // 折線圖
   temperatureChartContainer: {
     alignItems: 'center',
     marginTop: 20,
+    
   },
+
+  // 時間選擇
   weekdayTimePicker: {
+    backgroundColor: '#f0f0f0',
     alignItems: 'center',
     marginTop: 20,
   },
