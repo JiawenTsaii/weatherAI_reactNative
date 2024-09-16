@@ -5,6 +5,7 @@ import { LineChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';// 從Expo import DateTimePicker 组件(套件?)
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
+import { Audio } from 'expo-av';
 
 import Crawler from './useCrawler.js';
 import cities from './selectCity.js';
@@ -330,6 +331,29 @@ const App = () => {
       setModalWord(knowledge.SolarTerms['test']);  //待刪
     }
 
+  }, []);
+
+  /* 背景音樂 */
+  const sound = new Audio.Sound();
+
+  useEffect(() => {
+    // 當組件掛載時播放背景音樂
+    const loadAndPlaySound = async () => {
+      try {
+        await sound.loadAsync(require('./assets/歡樂的夏日旅行.mp3')); // 替換成你的音檔路徑
+        await sound.setIsLoopingAsync(true); // 設置循環播放
+        await sound.playAsync();
+      } catch (error) {
+        console.log('Error loading sound:', error);
+      }
+    };
+
+    loadAndPlaySound();
+
+    // 當組件卸載時卸載音樂
+    return () => {
+      sound.unloadAsync();
+    };
   }, []);
 
   return (

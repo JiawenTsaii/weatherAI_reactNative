@@ -30,7 +30,8 @@
     "react-native-fs": "^2.20.0",
     "react-native-svg": "15.2.0",
     "react-native-web": "~0.19.6",
-    "react-native-webview": "13.8.6"
+    "react-native-webview": "13.8.6",
+    "expo-av": "~14.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
