@@ -10,68 +10,6 @@ import Crawler from './useCrawler.js';
 import cities from './selectCity.js';
 import * as knowledge from './weatherKnow.json';
 
-{/* 通知時間 */}
-// const WeekdayTimePicker = ({ day }) => {
-//   const [selectedTime, setSelectedTime] = useState(null);
-//   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-
-//   const showTimePicker = () => {
-//     setTimePickerVisibility(true);
-//   };
-
-//   const hideTimePicker = () => {
-//     setTimePickerVisibility(false);
-//   };
-
-//   const handleConfirm = (time) => {
-//     setSelectedTime(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })); // 格式化並設置所選擇的時間
-//     hideTimePicker();
-//   };
-
-//   const [weekDataforalarm, setWeekDataforalarm] = useState([
-//     { day: '週一', time: null },
-//     { day: '週二', time: null },
-//     { day: '週三', time: null },
-//     { day: '週四', time: null },
-//     { day: '週五', time: null },
-//     { day: '週六', time: null },
-//     { day: '週日', time: null }
-//   ]);
-
-//   const handleSaveTime = async () => {
-//     try {
-//       // 將選擇的時間轉換成字符串格式
-//       const timeData = JSON.stringify(weekDataforalarm);
-//       // AsyncStorage 使用'weekDataforalarm'識別您保存的數據
-//       await AsyncStorage.setItem('weekDataforalarm', timeData);
-//       // 提示用戶數據已成功保存
-//       Alert.alert('保存成功', '您選擇的時間已成功保存到本地。');
-//     } catch (error) {
-//       // 如果保存數據時發生錯誤顯示錯誤消息
-//       console.error('保存時間數據時出錯:', error);
-//       Alert.alert('保存失敗', '保存時間數據時出錯，請稍後重試。');
-//     }
-//   };
-
-//   return (
-//     <View style={styles.weekdayTimePicker}>
-//       <Text>{day}</Text>  
-//       <Button title="選擇時間" onPress={showTimePicker} />
-//       {isTimePickerVisible && (
-//         <DateTimePicker
-//           mode="time"
-//           value={new Date()}
-//           onChange={(event, selectedDate) => handleConfirm(selectedDate)}
-//         />
-//       )}
-//       {selectedTime && (
-//         <Button title="確定提醒時間" onPress={handleSaveTime} />
-//       )}
-//     </View>
-//   );
-// };
-
-
 {/* main */}
 const App = () => {
 
@@ -124,7 +62,7 @@ const App = () => {
       
       for (let i = 0; i < locations.length; i++) {
         if (locations[i].locationName == city) {
-          console.log(locations[i].locationName);
+          // console.log(locations[i].locationName);
           const locationData = locations[i];
   
           const conditionData = locationData.weatherElement[0].time;  //Wx
@@ -138,6 +76,7 @@ const App = () => {
             const day = date.getDate();
             weekData[day] = { ...weekData[day], condition: item.parameter.parameterName}
           });
+          console.log(conditionData.parameter.parameterValue);
 
           MaxTimeData.forEach(item => {
             const date = new Date(item.startTime);
@@ -201,27 +140,28 @@ const App = () => {
     fetchRainData();
   }, [city]); // 將 city 添加到依賴陣列
 
+  {/* 失敗 */}
   // 本地時間數據的 useEffect
-  useEffect(() => {
-    const loadTimeData = async () => {
-      try {
-        // 從本地存儲中讀取所保存的時間數據
-        const storedData = await AsyncStorage.getItem('weekDataforalarm');
-        if (storedData !== null) {
-          // 如果找到本地數據，轉換為對象格式並設置為狀態
-          setWeekDataforalarm(JSON.parse(storedData));
-        } else {
-          // 如果沒有找到本地數據，您可以執行相應的處理邏輯，例如顯示默認值
-          console.log('找不到本地時間數據。');
-        }
-      } catch (error) {
-        // 如果讀取本地數據時發生錯誤，請記錄錯誤消息
-        console.error('讀取時間數據時出錯:', error);
-      }
-    };
-    // 調用函數加載本地時間數據
-    loadTimeData();
-  }, []);
+  // useEffect(() => {
+  //   const loadTimeData = async () => {
+  //     try {
+  //       // 從本地存儲中讀取所保存的時間數據
+  //       const storedData = await AsyncStorage.getItem('weekDataforalarm');
+  //       if (storedData !== null) {
+  //         // 如果找到本地數據，轉換為對象格式並設置為狀態
+  //         setWeekDataforalarm(JSON.parse(storedData));
+  //       } else {
+  //         // 如果沒有找到本地數據，您可以執行相應的處理邏輯，例如顯示默認值
+  //         console.log('找不到本地時間數據。');
+  //       }
+  //     } catch (error) {
+  //       // 如果讀取本地數據時發生錯誤，請記錄錯誤消息
+  //       console.error('讀取時間數據時出錯:', error);
+  //     }
+  //   };
+  //   // 調用函數加載本地時間數據
+  //   loadTimeData();
+  // }, []);
 
   const chartData = {
     labels: weekData.map((day) => day.day),
@@ -241,17 +181,16 @@ const App = () => {
 
   const today_month = (new Date().getMonth() + 1).toString();
   const today_day = new Date().getDate().toString();
-  const today = today_month + today_day;
 
   const todayData = weekData.find(day => day.condition);
 
-  {/* 當天最高/最低溫 */}
+  /* 當天最高/最低溫 */
   const dailyHighs = weekData.map(day => day.high);
   const dailyLows = weekData.map(day => day.low);
   const todayHigh = Math.max(...dailyHighs); // 找到今天的最高溫
   const todayLow = Math.min(...dailyLows); // 找到今天的最低溫
 
-  // 彈出小知識視窗
+  {/* 彈出小知識視窗 */}
   const [modalVisible, setModalVisible] = useState(false);
   const [modalWord, setModalWord] = useState('');
 
@@ -343,7 +282,7 @@ const App = () => {
 
   }, []);
 
-  // 背景音樂
+  {/* 背景音樂 */}
   const sound = new Audio.Sound();
 
   useEffect(() => {
