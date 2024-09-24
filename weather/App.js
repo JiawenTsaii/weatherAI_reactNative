@@ -39,12 +39,41 @@ const App = () => {
   const [summerFitTemperature, setSummerFitTemperature] = useState(25);
   const [winterFitTemperature, setWinterFitTemperature] = useState(20);
 
+  // 新增一個控制彈出視窗顯示的狀態
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+
+  // 顯示並自動隱藏彈出視窗
+  const showPopup = (message) => {
+    setPopupMessage(message);
+    setIsPopupVisible(true);
+
+    setTimeout(() => {
+      setIsPopupVisible(false);
+    }, 3000);}
+
   // 推薦衣物溫度
   const adjustRecommendation = (type) => {
     if (temperature >= summerFitTemperature && type === 'hot') {
       setSummerFitTemperature(summerFitTemperature - 1);
+      showPopup(`目前的夏裝推薦溫度: ${summerFitTemperature - 1}, 冬裝推薦溫度: ${winterFitTemperature}`);
+    } else if (temperature >= summerFitTemperature && type === 'cold') {
+      setSummerFitTemperature(summerFitTemperature + 1);
+      showPopup(`目前的夏季推薦溫度: ${summerFitTemperature + 1}, 冬季推薦溫度: ${winterFitTemperature}`);
+    } else if (temperature <= winterFitTemperature && type === 'hot') {
+      setWinterFitTemperature(winterFitTemperature - 1);
+      showPopup(`目前的夏季推薦溫度: ${summerFitTemperature}, 冬季推薦溫度: ${winterFitTemperature - 1}`);
     } else if (temperature <= winterFitTemperature && type === 'cold') {
       setWinterFitTemperature(winterFitTemperature + 1);
+      showPopup(`目前的夏季推薦溫度: ${summerFitTemperature}, 冬季推薦溫度: ${winterFitTemperature + 1}`);
+    } else if (temperature > winterFitTemperature && temperature < summerFitTemperature &&  type === 'cold') {
+      setWinterFitTemperature(winterFitTemperature + 1);
+      setSummerFitTemperature(summerFitTemperature + 1);
+      showPopup(`目前的夏季推薦溫度: ${summerFitTemperature + 1}, 冬季推薦溫度: ${winterFitTemperature + 1}`);
+    } else if (temperature > winterFitTemperature && temperature < summerFitTemperature &&  type === 'hot') {
+      setWinterFitTemperature(winterFitTemperature - 1);
+      setSummerFitTemperature(summerFitTemperature - 1);
+      showPopup(`目前的夏季推薦溫度: ${summerFitTemperature - 1}, 冬季推薦溫度: ${winterFitTemperature - 1}`);
     }
   };
 
@@ -76,7 +105,7 @@ const App = () => {
             const day = date.getDate();
             weekData[day] = { ...weekData[day], condition: item.parameter.parameterName}
           });
-          console.log(conditionData.parameter.parameterValue);
+          // console.log(conditionData.parameter.parameterValue);
 
           MaxTimeData.forEach(item => {
             const date = new Date(item.startTime);
@@ -414,6 +443,14 @@ const App = () => {
             <Image source={require('./assets/jacket.png')} style={styles.clothingImage} />
           </View>
         )}
+
+        {/* 彈出視窗顯示 */}
+        {isPopupVisible && (
+          <View style={styles.popup}>
+            <Text style={styles.popupText}>{popupMessage}</Text>
+          </View>
+        )}
+
         <View style={styles.buttonContainer}>
           <Button title="太冷 🥶" onPress={() => adjustRecommendation('cold')} />
           <Button title="完美 🥳" onPress={() => adjustRecommendation("perfect")} />
@@ -570,6 +607,18 @@ const styles = StyleSheet.create({
     height: 100, // 調整圖片高度
     resizeMode: 'contain', // 確保圖片不變形
     marginHorizontal: 10 // 圖片之間的間距
+  },
+
+  // 衣物推薦溫度
+  popup: {
+    position: 'absolute',
+    top: '50%',
+    backgroundColor: '#000',
+    padding: 10,
+    borderRadius: 5,
+  },
+  popupText: {
+    color: '#fff',
   },
 
   // 天氣資訊1
